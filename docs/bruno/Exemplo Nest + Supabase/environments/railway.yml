@@ -1,0 +1,4 @@
+name: railway
+variables:
+  - name: BASE_URL
+    value: https://nest-prisma-example-production.up.railway.app
