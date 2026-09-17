@@ -1,114 +1,952 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Como recriar este projeto de exemplo passo a passo
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Este guia apresenta, passo a passo, a criação de uma API utilizando:
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+- **NestJS**
+- **Prisma 7**
+- **PostgreSQL**
+- **Prisma Adapter PostgreSQL**
+- **CRUD de produtos**
+- **Seed com `upsert`**
+- **Configuração para build e deploy**
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+# 1. Criar o projeto NestJS
 
-## Project setup
+Abra uma nova janela do **VS Code**, sem nenhum projeto aberto.
 
-```bash
-$ npm install
+## 1.1. Acessar a pasta `Documents`
+
+No terminal (`cmd`):
+
+```cmd
+cd Documents
 ```
 
-## Compile and run the project
+## 1.2. Instalar a CLI do NestJS
 
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```cmd
+npm i -g @nestjs/cli
 ```
 
-## Run tests
+## 1.3. Criar o projeto
 
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+```cmd
+npx nest new nest-prisma
 ```
 
-## Deployment
+Durante a criação do projeto, selecione:
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```text
+npm
+N
+ESLint
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 1.4. Entrar na pasta do projeto
 
-## Observability
+```cmd
+cd nest-prisma
+```
 
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
+## 1.5. Abrir o projeto no VS Code
 
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
+```cmd
+code .
+```
 
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
+---
 
-## Resources
+# 2. Instalar e configurar o Prisma 7
 
-Check out a few resources that may come in handy when working with NestJS:
+No terminal do VS Code:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observer](https://observer.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## 2.1. Instalar o Prisma Client e o PostgreSQL Adapter
 
-## Support
+```cmd
+npm install @prisma/client@7 @prisma/adapter-pg pg
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## 2.2. Instalar o Prisma CLI e o `tsx`
 
-## Stay in touch
+```cmd
+npm install -D prisma@7 tsx
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## 2.3. Inicializar o Prisma
 
-## License
+```cmd
+npx prisma init
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+---
+
+# 3. Configurar o `schema.prisma`
+
+Abra o arquivo:
+
+```text
+prisma/schema.prisma
+```
+
+Acrescente o modelo `Product`:
+
+```prisma
+model Product {
+  id        Int      @id @default(autoincrement())
+  sku       String   @unique @default(uuid())
+  name      String
+  price     Float
+  createdAt DateTime @default(now())
+}
+```
+
+---
+
+# 4. Gerar o Prisma Client
+
+Execute:
+
+```cmd
+npx prisma generate
+```
+
+---
+
+# 5. Configurar a conexão com o banco
+
+Edite o arquivo:
+
+```text
+.env
+```
+
+Ajuste a variável `DATABASE_URL` de acordo com o seu banco PostgreSQL.
+
+Exemplo:
+
+```dotenv
+DATABASE_URL="postgresql://usuario:senha@localhost:5432/nest_prisma"
+```
+
+---
+
+# 6. Criar a migration
+
+Execute:
+
+```cmd
+npx prisma migrate dev --name init
+```
+
+Caso seja necessário apagar o banco de desenvolvimento e recriar as migrations:
+
+```cmd
+npx prisma migrate reset
+```
+
+> **Atenção:** o comando `migrate reset` apaga os dados existentes no banco de desenvolvimento.
+
+---
+
+# 7. Criar o módulo Prisma
+
+Gere o módulo:
+
+```cmd
+npx nest g module prisma
+```
+
+Gere o serviço:
+
+```cmd
+npx nest g service prisma
+```
+
+---
+
+## 7.1. Arquivo `src/prisma/prisma.module.ts`
+
+```typescript
+import { Module } from '@nestjs/common';
+
+import { PrismaService } from './prisma.service.js';
+
+@Module({
+  providers: [PrismaService],
+  exports: [PrismaService],
+})
+export class PrismaModule {}
+```
+
+O `PrismaService` é exportado para que outros módulos possam utilizá-lo.
+
+---
+
+## 7.2. Arquivo `src/prisma/prisma.service.ts`
+
+```typescript
+import {
+  Injectable,
+  OnModuleInit,
+} from '@nestjs/common';
+
+import { PrismaClient } from '../generated/prisma/client.js';
+
+import { PrismaPg } from '@prisma/adapter-pg';
+
+@Injectable()
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit
+{
+  constructor() {
+    const connectionString =
+      process.env.DATABASE_URL;
+
+    if (!connectionString) {
+      throw new Error(
+        'DATABASE_URL não definida',
+      );
+    }
+
+    const adapter = new PrismaPg({
+      connectionString,
+    });
+
+    super({ adapter });
+  }
+
+  async onModuleInit() {
+    await this.$connect();
+  }
+}
+```
+
+---
+
+# 8. Criar o módulo de produtos
+
+Execute:
+
+```cmd
+npx nest g module products
+```
+
+---
+
+## 8.1. Arquivo `src/products/products.module.ts`
+
+```typescript
+import { Module } from '@nestjs/common';
+
+import { ProductsController } from './products.controller.js';
+
+import { ProductsService } from './products.service.js';
+
+import { PrismaModule } from '../prisma/prisma.module.js';
+
+@Module({
+  imports: [PrismaModule],
+  controllers: [ProductsController],
+  providers: [ProductsService],
+})
+export class ProductsModule {}
+```
+
+O `PrismaModule` é importado para disponibilizar o `PrismaService` no módulo de produtos.
+
+---
+
+# 9. Instalar e configurar o `ConfigModule`
+
+Instale o pacote:
+
+```cmd
+npm install @nestjs/config
+```
+
+---
+
+## 9.1. Arquivo `src/app.module.ts`
+
+```typescript
+import { Module } from '@nestjs/common';
+
+import { ConfigModule } from '@nestjs/config';
+
+import { ProductsModule } from './products/products.module.js';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+
+    ProductsModule,
+  ],
+})
+export class AppModule {}
+```
+
+A opção:
+
+```typescript
+isGlobal: true
+```
+
+permite utilizar o `ConfigModule` nos demais módulos da aplicação sem precisar importá-lo novamente.
+
+---
+
+# 10. Criar o serviço de produtos
+
+Execute:
+
+```cmd
+npx nest g service products
+```
+
+---
+
+## 10.1. Arquivo `src/products/products.service.ts`
+
+```typescript
+import { Injectable } from '@nestjs/common';
+
+import { PrismaService } from '../prisma/prisma.service.js';
+
+@Injectable()
+export class ProductsService {
+  constructor(
+    private prisma: PrismaService,
+  ) {}
+
+  findAll() {
+    return this.prisma.product.findMany();
+  }
+
+  findOne(id: number) {
+    return this.prisma.product.findUnique({
+      where: { id },
+    });
+  }
+
+  create(data: {
+    name: string;
+    price: number;
+  }) {
+    return this.prisma.product.create({
+      data,
+    });
+  }
+
+  update(
+    id: number,
+    data: {
+      name?: string;
+      price?: number;
+    },
+  ) {
+    return this.prisma.product.update({
+      where: { id },
+      data,
+    });
+  }
+
+  remove(id: number) {
+    return this.prisma.product.delete({
+      where: { id },
+    });
+  }
+}
+```
+
+---
+
+# 11. Criar o controller de produtos
+
+Execute:
+
+```cmd
+npx nest g controller products
+```
+
+---
+
+## 11.1. Arquivo `src/products/products.controller.ts`
+
+```typescript
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+} from '@nestjs/common';
+
+import { ProductsService } from './products.service.js';
+
+@Controller('products')
+export class ProductsController {
+  constructor(
+    private productsService: ProductsService,
+  ) {}
+
+  @Get()
+  findAll() {
+    return this.productsService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.productsService.findOne(
+      Number(id),
+    );
+  }
+
+  @Post()
+  create(
+    @Body()
+    data: {
+      name: string;
+      price: number;
+    },
+  ) {
+    return this.productsService.create(data);
+  }
+
+  @Put(':id')
+  update(
+    @Param('id') id: string,
+    @Body()
+    data: {
+      name?: string;
+      price?: number;
+    },
+  ) {
+    return this.productsService.update(
+      Number(id),
+      data,
+    );
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.productsService.remove(
+      Number(id),
+    );
+  }
+}
+```
+
+---
+
+# 12. Endpoints da API
+
+O controller disponibiliza os seguintes endpoints:
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/products` | Lista todos os produtos |
+| `GET` | `/products/:id` | Busca um produto pelo ID |
+| `POST` | `/products` | Cria um produto |
+| `PUT` | `/products/:id` | Atualiza um produto |
+| `DELETE` | `/products/:id` | Remove um produto |
+
+---
+
+# 13. Criar o Seed
+
+Crie o arquivo:
+
+```text
+prisma/seed.ts
+```
+
+O seed será utilizado para inserir inicialmente 10 produtos no banco de dados.
+
+---
+
+## 13.1. Arquivo `prisma/seed.ts`
+
+```typescript
+import 'dotenv/config';
+
+import { PrismaClient } from '../src/generated/prisma/client.js';
+
+import { PrismaPg } from '@prisma/adapter-pg';
+
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
+});
+
+const prisma = new PrismaClient({
+  adapter,
+});
+
+async function main() {
+  const products = [
+    {
+      sku: '550e8400-e29b-41d4-a716-446655440001',
+      name: 'Notebook',
+      price: 3500.00,
+    },
+    {
+      sku: '550e8400-e29b-41d4-a716-446655440002',
+      name: 'Mouse',
+      price: 89.90,
+    },
+    {
+      sku: '550e8400-e29b-41d4-a716-446655440003',
+      name: 'Teclado',
+      price: 149.90,
+    },
+    {
+      sku: '550e8400-e29b-41d4-a716-446655440004',
+      name: 'Monitor',
+      price: 1299.90,
+    },
+    {
+      sku: '550e8400-e29b-41d4-a716-446655440005',
+      name: 'Headset',
+      price: 249.90,
+    },
+    {
+      sku: '550e8400-e29b-41d4-a716-446655440006',
+      name: 'Webcam',
+      price: 299.90,
+    },
+    {
+      sku: '550e8400-e29b-41d4-a716-446655440007',
+      name: 'SSD 1TB',
+      price: 599.90,
+    },
+    {
+      sku: '550e8400-e29b-41d4-a716-446655440008',
+      name: 'Memória RAM 16GB',
+      price: 399.90,
+    },
+    {
+      sku: '550e8400-e29b-41d4-a716-446655440009',
+      name: 'Mouse Pad',
+      price: 59.90,
+    },
+    {
+      sku: '550e8400-e29b-41d4-a716-446655440010',
+      name: 'Caixa de Som',
+      price: 199.90,
+    },
+  ];
+
+  for (const product of products) {
+    await prisma.product.upsert({
+      where: {
+        sku: product.sku,
+      },
+
+      update: {
+        name: product.name,
+        price: product.price,
+      },
+
+      create: product,
+    });
+  }
+
+  console.log(
+    'Seed executada com sucesso!',
+  );
+}
+
+main()
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());
+```
+
+---
+
+# 14. Como funciona o `upsert`
+
+O `upsert` permite executar o seed várias vezes sem criar registros duplicados.
+
+A lógica é:
+
+```typescript
+await prisma.product.upsert({
+  where: {
+    sku: product.sku,
+  },
+
+  update: {
+    name: product.name,
+    price: product.price,
+  },
+
+  create: product,
+});
+```
+
+Se o `sku` já existir:
+
+```text
+UPDATE
+```
+
+Se o `sku` ainda não existir:
+
+```text
+CREATE
+```
+
+Dessa forma, o seed pode ser executado novamente sem duplicar os produtos.
+
+---
+
+# 15. Configurar o Prisma 7
+
+Crie ou edite o arquivo:
+
+```text
+prisma7.config.ts
+```
+
+---
+
+## 15.1. Arquivo `prisma7.config.ts`
+
+```typescript
+import 'dotenv/config';
+
+import { defineConfig } from 'prisma/config';
+
+export default defineConfig({
+  schema: 'prisma/schema.prisma',
+
+  migrations: {
+    path: 'prisma/migrations',
+    seed: 'tsx prisma/seed.ts',
+  },
+
+  datasource: {
+    url: process.env.DATABASE_URL,
+  },
+});
+```
+
+---
+
+# 16. Executar o Seed
+
+Depois de configurar o `prisma7.config.ts`, execute:
+
+```cmd
+npx prisma db seed
+```
+
+Se tudo estiver correto, será exibida uma mensagem semelhante a:
+
+```text
+Seed executada com sucesso!
+```
+
+---
+
+# 17. Configurar o Build para Deploy
+
+Para que o deploy ocorra corretamente, é necessário configurar o processo de build da aplicação.
+
+A ideia é:
+
+1. Executar o `prisma generate`.
+2. Executar o build do NestJS.
+3. Copiar os arquivos necessários do diretório `prisma` para o `dist`.
+
+---
+
+# 18. Configurar o `nest-cli.json`
+
+Edite o arquivo:
+
+```text
+nest-cli.json
+```
+
+Utilize:
+
+```json
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "src",
+  "compilerOptions": {
+    "deleteOutDir": true,
+    "assets": [
+      {
+        "include": "../prisma/**/*",
+        "outDir": "dist/prisma"
+      }
+    ]
+  }
+}
+```
+
+A configuração:
+
+```json
+"assets": [
+  {
+    "include": "../prisma/**/*",
+    "outDir": "dist/prisma"
+  }
+]
+```
+
+faz com que os arquivos do diretório `prisma` sejam copiados para:
+
+```text
+dist/prisma
+```
+
+durante o processo de build.
+
+---
+
+# 19. Configurar o `package.json`
+
+Edite o arquivo:
+
+```text
+package.json
+```
+
+Inclua ou ajuste os scripts:
+
+```json
+{
+  "scripts": {
+    "prisma:generate": "prisma generate",
+    "build": "npm run prisma:generate && nest build"
+  }
+}
+```
+
+Mantenha os demais scripts existentes no `package.json`.
+
+---
+
+# 20. Executar o Build
+
+Execute:
+
+```cmd
+npm run build
+```
+
+O processo será:
+
+```text
+npm run prisma:generate
+        ↓
+prisma generate
+        ↓
+nest build
+        ↓
+dist/
+```
+
+O Prisma Client será gerado antes da compilação da aplicação NestJS.
+
+---
+
+# 21. Executar a aplicação
+
+Para executar a aplicação em modo de desenvolvimento:
+
+```cmd
+npm run start:dev
+```
+
+Por padrão, a aplicação estará disponível em:
+
+```text
+http://localhost:3000
+```
+
+---
+
+# 22. Testar a API
+
+## Listar produtos
+
+```http
+GET http://localhost:3000/products
+```
+
+## Buscar um produto
+
+```http
+GET http://localhost:3000/products/1
+```
+
+## Criar um produto
+
+```http
+POST http://localhost:3000/products
+Content-Type: application/json
+
+{
+  "name": "Celular",
+  "price": 1999.90
+}
+```
+
+## Atualizar um produto
+
+```http
+PUT http://localhost:3000/products/1
+Content-Type: application/json
+
+{
+  "name": "Notebook atualizado",
+  "price": 3999.90
+}
+```
+
+## Remover um produto
+
+```http
+DELETE http://localhost:3000/products/1
+```
+
+---
+
+# 23. Estrutura final do projeto
+
+Ao final, a estrutura do projeto será semelhante a:
+
+```text
+nest-prisma/
+│
+├── prisma/
+│   ├── migrations/
+│   │   └── ...
+│   │
+│   ├── schema.prisma
+│   └── seed.ts
+│
+├── src/
+│   │
+│   ├── prisma/
+│   │   ├── prisma.module.ts
+│   │   └── prisma.service.ts
+│   │
+│   ├── products/
+│   │   ├── products.controller.ts
+│   │   ├── products.module.ts
+│   │   └── products.service.ts
+│   │
+│   ├── app.module.ts
+│   └── main.ts
+│
+├── generated/
+│   └── prisma/
+│       └── ...
+│
+├── .env
+├── nest-cli.json
+├── package.json
+├── prisma7.config.ts
+├── tsconfig.json
+└── ...
+```
+
+---
+
+# 24. Resumo dos principais comandos
+
+## Criar o projeto
+
+```cmd
+cd Documents
+npm i -g @nestjs/cli
+npx nest new nest-prisma
+cd nest-prisma
+code .
+```
+
+## Instalar Prisma
+
+```cmd
+npm install @prisma/client@7 @prisma/adapter-pg pg
+npm install -D prisma@7 tsx
+```
+
+## Inicializar Prisma
+
+```cmd
+npx prisma init
+npx prisma generate
+```
+
+## Criar migration
+
+```cmd
+npx prisma migrate dev --name init
+```
+
+## Criar módulos, serviços e controller
+
+```cmd
+npx nest g module prisma
+npx nest g service prisma
+
+npx nest g module products
+npx nest g service products
+npx nest g controller products
+```
+
+## Instalar configuração
+
+```cmd
+npm install @nestjs/config
+```
+
+## Executar seed
+
+```cmd
+npx prisma db seed
+```
+
+## Executar aplicação
+
+```cmd
+npm run start:dev
+```
+
+## Gerar o build
+
+```cmd
+npm run build
+```
+
+---
+
+
+# Projeto concluído
+
+Ao finalizar todas as etapas, teremos uma API REST desenvolvida com **NestJS + Prisma 7 + PostgreSQL**, contendo:
+
+- CRUD de produtos;
+- integração com PostgreSQL;
+- Prisma Client;
+- `PrismaPg`;
+- configuração de variáveis de ambiente;
+- migrations;
+- seed com 10 produtos;
+- `upsert` para evitar duplicação;
+- configuração do build;
+- preparação para deploy.
