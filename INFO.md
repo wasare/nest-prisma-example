@@ -350,3 +350,32 @@ export default defineConfig({
 
 
 > npx prisma db seed
+
+
+Para o deploy ocorrer com sucesso:
+
+Editar o nest-cli.json
+
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "src",
+  "compilerOptions": {
+    "deleteOutDir": true,
+     "assets": [
+      {
+        "include": "../prisma/**/*",
+        "outDir": "dist/prisma"
+      }
+    ]
+  }
+}
+
+Editar o package.json e incluir / ajustar:
+{   ...
+  "scripts": {
+    "prisma:generate": "prisma generate",
+    "build": "npm run prisma:generate && nest build",
+    ...
+  }
+}
