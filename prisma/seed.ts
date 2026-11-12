@@ -78,5 +78,9 @@ async function main() {
 }
 
 main()
-  .catch(console.error)
+  .catch((error) => {
+    console.error(error);
+    // Sai com erro para que falhas no seed não passem despercebidas.
+    process.exitCode = 1;
+  })
   .finally(() => prisma.$disconnect());
