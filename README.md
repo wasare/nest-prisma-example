@@ -950,3 +950,23 @@ Ao finalizar todas as etapas, teremos uma API REST desenvolvida com **NestJS + P
 - `upsert` para evitar duplicação;
 - configuração do build;
 - preparação para deploy.
+
+---
+
+# Nota: melhorias em relação ao tutorial
+
+O tutorial acima mostra a versão inicial do projeto. O código deste repositório recebeu algumas melhorias depois disso:
+
+- **Validação dos dados de entrada:** o corpo das requisições `POST` e `PUT` é validado com DTOs (`src/products/dto/`) usando `class-validator` e um `ValidationPipe` global registrado no `AppModule`. Dados inválidos (nome vazio, preço ausente, negativo ou em texto, campos desconhecidos) recebem **400 Bad Request**.
+- **Validação do `id`:** as rotas com `:id` usam `ParseIntPipe`. Um `id` que não é número (ex.: `/products/abc`) recebe **400 Bad Request**.
+- **Produto inexistente:** `GET`, `PUT` e `DELETE` de um produto que não existe recebem **404 Not Found**. Antes, o `GET` devolvia 200 com corpo vazio e `PUT`/`DELETE` devolviam 500.
+- **Encerramento da aplicação:** o `main.ts` usa `app.enableShutdownHooks()` para fechar a conexão com o banco quando a aplicação é encerrada.
+- **Seed:** se o seed falhar, o comando termina com erro em vez de indicar sucesso.
+- **Testes:** os testes unitários e e2e usam mocks do Prisma, então rodam sem banco de dados, e cobrem os casos de erro acima.
+- **Dependências:** atualizadas para as versões mais recentes compatíveis.
+
+Novas dependências usadas pela validação:
+
+```cmd
+npm install class-validator class-transformer
+```
