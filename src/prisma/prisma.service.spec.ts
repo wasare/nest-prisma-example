@@ -5,6 +5,9 @@ describe('PrismaService', () => {
   let service: PrismaService;
 
   beforeEach(async () => {
+    // O construtor exige DATABASE_URL; a conexão só ocorre em onModuleInit.
+    process.env.DATABASE_URL ??= 'postgresql://user:pass@localhost:5432/test';
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [PrismaService],
     }).compile();
