@@ -1,0 +1,20 @@
+# Nunca copiar dependências ou builds locais para a imagem
+node_modules
+dist
+src/generated
+*.tsbuildinfo
+coverage
+
+# Nunca embutir segredos na imagem: o env vem de um arquivo externo
+.env
+.env.*
+docker.env*
+
+# Arquivos que não fazem parte da aplicação
+.git
+.claude
+.agents
+.windsurf
+docs
+logs
+*.log

@@ -1,0 +1,91 @@
+# Deploy de exemplo: PostgreSQL + migrations do Prisma + API NestJS.
+#
+# Uso, na raiz do projeto (docker.env é criado a partir de docker.env.example):
+#   docker compose --env-file docker.env up -d --build
+#
+# Ordem de inicialização:
+#   db (saudável) -> migrate (terminou com sucesso) -> app
+
+name: nest-prisma
+
+x-database-url: &database-url
+  # Montada a partir das variáveis do docker.env. O host é sempre o
+  # serviço "db", então a aplicação não tem como apontar para o banco errado.
+  DATABASE_URL: postgresql://${POSTGRES_USER:?defina POSTGRES_USER no docker.env (use --env-file docker.env)}:${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no docker.env (use --env-file docker.env)}@db:5432/${POSTGRES_DB:?defina POSTGRES_DB no docker.env (use --env-file docker.env)}?schema=public
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?defina POSTGRES_USER no docker.env (use --env-file docker.env)}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no docker.env (use --env-file docker.env)}
+      POSTGRES_DB: ${POSTGRES_DB:?defina POSTGRES_DB no docker.env (use --env-file docker.env)}
+    volumes:
+      # Volume nomeado: os dados sobrevivem a "down", rebuilds e novas versões da app.
+      # (No Postgres 18 o ponto de montagem é /var/lib/postgresql.)
+      - db_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # O banco NÃO expõe porta para fora: só migrate e app o acessam, pela rede interna.
+
+  migrate:
+    build:
+      context: .
+      target: migrator
+    image: nest-prisma-migrator
+    environment:
+      <<: *database-url
+    depends_on:
+      db:
+        condition: service_healthy
+    # Roda uma vez e termina. Se falhar, a app não sobe.
+    restart: "no"
+
+  app:
+    build:
+      context: .
+      target: runtime
+    image: nest-prisma-app
+    restart: unless-stopped
+    # Usa um init leve como PID 1: repassa o sinal de parada para o Node e
+    # permite que a app encerre sozinha (fechando a conexão com o banco).
+    init: true
+    environment:
+      <<: *database-url
+      PORT: 3000
+      LOG_FILE: /app/logs/app.log
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - app_logs:/app/logs
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/products').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Opcional: popula o banco com os 10 produtos de exemplo.
+  # Usa upsert pelo SKU, então pode rodar várias vezes sem duplicar.
+  #   docker compose --env-file docker.env run --rm seed
+  seed:
+    image: nest-prisma-migrator
+    profiles: ["seed"]
+    environment:
+      <<: *database-url
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command: ["npx", "prisma", "db", "seed"]
+    restart: "no"
+
+volumes:
+  db_data:
+  app_logs:
