@@ -62,3 +62,6 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Arquivo real de variáveis do deploy (use docker.env.example como modelo)
 docker.env
+
+# Dados do banco e logs do deploy com Docker (pastas montadas nos containers)
+/docker_data/
