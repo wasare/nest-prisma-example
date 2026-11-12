@@ -59,3 +59,6 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # TypeScript incremental build cache
 *.tsbuildinfo
+
+# Arquivo real de variáveis do deploy (use docker.env.example como modelo)
+docker.env
