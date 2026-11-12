@@ -10,6 +10,9 @@ coverage
 .env.*
 docker.env*
 
+# Dados do banco e logs do deploy (pastas montadas nos containers)
+docker_data
+
 # Arquivos que não fazem parte da aplicação
 .git
 .claude

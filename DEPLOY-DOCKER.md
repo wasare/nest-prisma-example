@@ -12,6 +12,7 @@ O projeto inclui um deploy completo com **Docker Compose**: banco PostgreSQL, ap
 | `.dockerignore` | Impede que `node_modules`, `dist` e arquivos `.env` entrem na imagem |
 | `compose.yaml` | Define os serviços `db`, `migrate`, `app` e `seed` |
 | `docker.env.example` | Modelo do arquivo de variáveis |
+| `docker_data/` | Criada no primeiro `up`: guarda os dados do banco e os logs (fora do Git) |
 
 ## 2. Serviços
 
@@ -19,10 +20,26 @@ O projeto inclui um deploy completo com **Docker Compose**: banco PostgreSQL, ap
 db (saudável) ──> migrate (terminou com sucesso) ──> app
 ```
 
-- **db**: imagem oficial `postgres:18-alpine`. Os dados ficam no volume `db_data`. A porta do banco **não** é exposta para fora, só os outros serviços acessam pela rede interna do Compose.
+- **db**: imagem oficial `postgres:18-alpine`. Os dados ficam na pasta `docker_data/postgres` do projeto. A porta do banco **não** é exposta para fora, só os outros serviços acessam pela rede interna do Compose.
 - **migrate**: executa `prisma migrate deploy` uma vez e termina. Se falhar, a aplicação **não sobe**.
-- **app**: a API NestJS, exposta na porta `APP_PORT` (padrão `3000`). Os logs são gravados no volume `app_logs` (`/app/logs/app.log`).
+- **app**: a API NestJS, exposta na porta `APP_PORT` (padrão `3000`). Os logs são gravados em `docker_data/logs/app.log`.
 - **seed** (opcional): popula o banco com os 10 produtos de exemplo.
+
+### Pasta `docker_data`
+
+Os volumes são **pastas do próprio projeto** (*bind mounts*):
+
+```text
+docker_data/
+├── postgres/   -> /var/lib/postgresql no container db
+└── logs/       -> /app/logs no container app
+```
+
+- O Docker cria as pastas automaticamente no primeiro `up`.
+- `docker_data/` está no `.gitignore` (não vai para o Git) e no `.dockerignore` (não entra na imagem).
+- **Não edite nem apague arquivos de `docker_data/postgres`** com o sistema rodando: são os arquivos internos do banco.
+- **Não deixe o projeto numa pasta sincronizada** (Google Drive, OneDrive, Dropbox, iCloud). A sincronização pode corromper os arquivos do banco.
+- **Linux:** a aplicação roda com o usuário `node` (UID 1000). Se o log em arquivo não funcionar, crie a pasta antes do primeiro `up` com o seu usuário: `mkdir -p docker_data/logs`.
 
 ## 3. Criar o arquivo `docker.env`
 
@@ -79,7 +96,7 @@ docker compose --env-file docker.env up -d
 - `--no-cache`: ignora o cache e executa todas as etapas do `Dockerfile` novamente.
 - `--pull`: baixa a versão mais recente das imagens base (`node:24-alpine`).
 
-O build sem cache **não afeta os dados**: o banco fica no volume `db_data`, que não faz parte da imagem.
+O build sem cache **não afeta os dados**: o banco fica na pasta `docker_data/postgres`, que não faz parte da imagem.
 
 Verificar os serviços:
 
@@ -105,7 +122,7 @@ O seed usa `upsert` pelo `sku`, então pode ser executado várias vezes sem dupl
 
 ## 6. Como os dados são preservados
 
-- Os dados do PostgreSQL ficam no **volume nomeado** `db_data`. Rebuild da imagem, `docker compose down` e novas versões da aplicação **não apagam** esse volume.
+- Os dados do PostgreSQL ficam na pasta `docker_data/postgres`. Rebuild da imagem, `docker compose down` (inclusive `down -v`) e novas versões da aplicação **não apagam** essa pasta.
 - O serviço `migrate` usa somente `prisma migrate deploy`, que:
   - aplica apenas as migrations **pendentes** da pasta `prisma/migrations`;
   - registra cada migration aplicada na tabela `_prisma_migrations`, então nada é aplicado duas vezes;
@@ -164,19 +181,28 @@ docker compose --env-file docker.env restart app
 ### Remover os containers
 
 ```bash
-# Para e REMOVE os containers e a rede (os volumes e os dados são mantidos)
+# Para e REMOVE os containers e a rede (a pasta docker_data e os dados são mantidos)
 docker compose --env-file docker.env down
 ```
 
 Depois de um `down`, use `up -d` para criar os containers novamente.
 
-| Comando | Containers | Dados (volumes) |
+| Comando | Containers | Dados (`docker_data/`) |
 | --- | --- | --- |
 | `stop` | parados, continuam existindo | mantidos |
 | `down` | removidos | mantidos |
-| `down -v` | removidos | **apagados** |
 
-> **Atenção:** `docker compose down -v` apaga os volumes e, com eles, **todos os dados do banco**. Use apenas se quiser começar do zero.
+### Começar do zero (apagar todos os dados)
+
+Os dados só são apagados removendo a pasta `docker_data`, **com os containers parados**:
+
+```bash
+docker compose --env-file docker.env down
+rm -rf docker_data          # Windows (cmd): rmdir /s /q docker_data
+docker compose --env-file docker.env up -d --build
+```
+
+> **Atenção:** isso apaga **todos os dados do banco** e os logs, sem como desfazer. Faça uma cópia da pasta `docker_data` antes, se precisar guardar os dados.
 
 ### Logs
 
@@ -187,9 +213,9 @@ docker compose --env-file docker.env logs -f app
 # Ver os logs das migrations
 docker compose --env-file docker.env logs migrate
 
-# Ver o arquivo de log gravado no volume app_logs
-docker compose --env-file docker.env exec app cat /app/logs/app.log
 ```
+
+O log da aplicação também fica gravado no arquivo `docker_data/logs/app.log`, que pode ser aberto direto no editor.
 
 ### Migrations
 

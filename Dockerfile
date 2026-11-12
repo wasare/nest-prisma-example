@@ -43,7 +43,7 @@ RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=build /app/dist ./dist
 
-# Pasta de logs: montada como volume pelo docker compose.
+# Pasta de logs: o docker compose monta aqui a pasta docker_data/logs do host.
 RUN mkdir -p /app/logs && chown node:node /app/logs
 USER node
 
