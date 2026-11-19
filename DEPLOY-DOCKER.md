@@ -69,10 +69,18 @@ Edite o `docker.env` e troque a senha. Use **apenas letras e números** na senha
 POSTGRES_USER=nest
 POSTGRES_PASSWORD=troqueEstaSenha123
 POSTGRES_DB=nest_prisma
+DATABASE_URL=postgresql://nest:troqueEstaSenha123@db:5432/nest_prisma?schema=public
 APP_PORT=3000
 ```
 
-A `DATABASE_URL` **não** é escrita à mão: o `compose.yaml` monta essa URL a partir dessas variáveis, sempre apontando para o serviço `db`. Assim o banco e a aplicação nunca ficam com credenciais diferentes.
+A `DATABASE_URL` é a URL de conexão usada pelo `migrate`, pela `app` e pelo `seed`. Ela repete o usuário, a senha e o banco das variáveis `POSTGRES_*`:
+
+```text
+postgresql://USUARIO:SENHA@db:5432/BANCO?schema=public
+```
+
+- O host é sempre `db`, o nome do serviço do banco no `compose.yaml` (não use `localhost`: dentro do container, `localhost` é o próprio container).
+- Ao trocar a senha, troque **nas duas linhas** (`POSTGRES_PASSWORD` e `DATABASE_URL`). Se ficarem diferentes, o `migrate` falha com o erro `P1000: Authentication failed`.
 
 ## 4. Subir o sistema
 
@@ -82,7 +90,7 @@ Todos os comandos são executados **na raiz do projeto** (mesmos comandos no Win
 docker compose --env-file docker.env up -d --build
 ```
 
-> Se o `--env-file docker.env` for esquecido, o Compose para com a mensagem `defina POSTGRES_USER no docker.env (use --env-file docker.env)` e nada é criado. Isso vale para **todos** os comandos `docker compose` deste projeto, inclusive `ps`, `stop` e `logs`.
+> Se o `--env-file docker.env` for esquecido, o Compose para com mensagens como `required variable POSTGRES_USER is missing a value: defina POSTGRES_USER no docker.env` e nada é criado. Isso vale para **todos** os comandos `docker compose` deste projeto, inclusive `ps`, `stop` e `logs`.
 
 ### Build sem cache
 

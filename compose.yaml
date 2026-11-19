@@ -9,18 +9,18 @@
 name: nest-prisma
 
 x-database-url: &database-url
-  # Montada a partir das variáveis do docker.env. O host é sempre o
-  # serviço "db", então a aplicação não tem como apontar para o banco errado.
-  DATABASE_URL: postgresql://${POSTGRES_USER:?defina POSTGRES_USER no docker.env (use --env-file docker.env)}:${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no docker.env (use --env-file docker.env)}@db:5432/${POSTGRES_DB:?defina POSTGRES_DB no docker.env (use --env-file docker.env)}?schema=public
+  # A URL completa vem do docker.env. O host dela deve ser o serviço "db",
+  # com o mesmo usuário, senha e banco das variáveis POSTGRES_*.
+  DATABASE_URL: ${DATABASE_URL:?defina DATABASE_URL no docker.env}
 
 services:
   db:
     image: postgres:18-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:?defina POSTGRES_USER no docker.env (use --env-file docker.env)}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no docker.env (use --env-file docker.env)}
-      POSTGRES_DB: ${POSTGRES_DB:?defina POSTGRES_DB no docker.env (use --env-file docker.env)}
+      POSTGRES_USER: ${POSTGRES_USER:?defina POSTGRES_USER no docker.env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no docker.env}
+      POSTGRES_DB: ${POSTGRES_DB:?defina POSTGRES_DB no docker.env}
     volumes:
       # Pasta do projeto: os dados sobrevivem a "down", rebuilds e novas versões da app.
       # (No Postgres 18 o ponto de montagem é /var/lib/postgresql.)
@@ -66,7 +66,8 @@ services:
       migrate:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/products').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      # wget (já vem no Alpine) termina com erro se a API não responder 2xx.
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/products"]
       interval: 10s
       timeout: 5s
       retries: 5
