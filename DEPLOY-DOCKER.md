@@ -10,7 +10,8 @@ O projeto inclui um deploy completo com **Docker Compose**: banco PostgreSQL, ap
 | --- | --- |
 | `Dockerfile` | Build da imagem em 3 etapas: `build`, `migrator` e `runtime` |
 | `.dockerignore` | Impede que `node_modules`, `dist` e arquivos `.env` entrem na imagem |
-| `compose.yaml` | Define os serviços `db`, `migrate`, `app` e `seed` |
+| `compose.yaml` | Define os serviços `db`, `migrate`, `app` e `seed`, com as imagens publicadas no GitHub Container Registry (sem build) |
+| `compose.build.yaml` | Só as seções `build` do `migrate` e da `app`: usado junto com o `compose.yaml` para gerar as imagens |
 | `docker.env.example` | Modelo do arquivo de variáveis |
 | `docker_data/` | Criada no primeiro `up`: guarda os dados do banco e os logs (fora do Git) |
 
@@ -43,18 +44,10 @@ docker_data/
 
 ## 3. Criar o arquivo `docker.env`
 
-Na raiz do projeto, crie o arquivo `docker.env` a partir do modelo.
-
-macOS / Linux:
+Na raiz do projeto, crie o arquivo `docker.env` a partir do modelo (Git Bash; o mesmo comando no macOS e no Linux):
 
 ```bash
 cp docker.env.example docker.env
-```
-
-Windows (`cmd`):
-
-```cmd
-copy docker.env.example docker.env
 ```
 
 O `docker.env` é **externo** à aplicação e à imagem:
@@ -71,6 +64,8 @@ POSTGRES_PASSWORD=troqueEstaSenha123
 POSTGRES_DB=nest_prisma
 DATABASE_URL=postgresql://nest:troqueEstaSenha123@db:5432/nest_prisma?schema=public
 APP_PORT=3000
+IMAGE_PREFIX=ghcr.io/seu_usuario
+IMAGE_TAG=1.0.0
 ```
 
 A `DATABASE_URL` é a URL de conexão usada pelo `migrate`, pela `app` e pelo `seed`. Ela repete o usuário, a senha e o banco das variáveis `POSTGRES_*`:
@@ -80,24 +75,42 @@ postgresql://USUARIO:SENHA@db:5432/BANCO?schema=public
 ```
 
 - O host é sempre `db`, o nome do serviço do banco no `compose.yaml` (não use `localhost`: dentro do container, `localhost` é o próprio container).
+- `IMAGE_PREFIX` é o começo do nome das imagens: `ghcr.io/` + o usuário do GitHub, **em minúsculas**. `IMAGE_TAG` é a versão que o build gera e que o `up` usa.
 - Ao trocar a senha, troque **nas duas linhas** (`POSTGRES_PASSWORD` e `DATABASE_URL`). Se ficarem diferentes, o `migrate` falha com o erro `P1000: Authentication failed`.
 
-## 4. Subir o sistema
+## 4. Gerar as imagens e subir o sistema
 
-Todos os comandos são executados **na raiz do projeto** (mesmos comandos no Windows, macOS e Linux):
+Todos os comandos são executados **na raiz do projeto**, no Git Bash (os mesmos no macOS e no Linux).
+
+O projeto usa **dois arquivos** do Compose:
+
+| Arquivo | Onde é usado |
+| --- | --- |
+| `compose.yaml` | Em qualquer máquina que vai **rodar** o sistema. Usa as imagens pelo nome completo (`ghcr.io/...`) e baixa do GHCR as que faltarem |
+| `compose.build.yaml` | Só no computador com o código-fonte, **junto** com o `compose.yaml`: gera as imagens (build) e as envia ao GHCR (push) |
+
+Gerar as imagens (no computador com o código):
 
 ```bash
-docker compose --env-file docker.env up -d --build
+docker compose -f compose.yaml -f compose.build.yaml --env-file docker.env build
 ```
+
+Subir o sistema (só o `compose.yaml`):
+
+```bash
+docker compose --env-file docker.env up -d
+```
+
+> Com só o `compose.yaml`, o `build` responde `No services to build`: use os dois arquivos com `-f`.
 
 > Se o `--env-file docker.env` for esquecido, o Compose para com mensagens como `required variable POSTGRES_USER is missing a value: defina POSTGRES_USER no docker.env` e nada é criado. Isso vale para **todos** os comandos `docker compose` deste projeto, inclusive `ps`, `stop` e `logs`.
 
 ### Build sem cache
 
-O `--build` reaproveita o cache do Docker, o que deixa o build rápido. Para refazer a imagem **do zero** (por exemplo, se algo parecer desatualizado ou o build se comportar de forma estranha):
+O `build` reaproveita o cache do Docker, o que deixa o build rápido. Para refazer a imagem **do zero** (por exemplo, se algo parecer desatualizado ou o build se comportar de forma estranha):
 
 ```bash
-docker compose --env-file docker.env build --no-cache --pull
+docker compose -f compose.yaml -f compose.build.yaml --env-file docker.env build --no-cache --pull
 docker compose --env-file docker.env up -d
 ```
 
@@ -148,13 +161,20 @@ O seed usa `upsert` pelo `sku`, então pode ser executado várias vezes sem dupl
    ```
 
 2. Versione a pasta `prisma/migrations` no Git junto com o código.
-3. No servidor, rode o mesmo comando de deploy:
+3. Gere e publique uma **versão nova** das imagens (troque o `IMAGE_TAG` no `docker.env`, por exemplo para `1.1.0`):
 
    ```bash
-   docker compose --env-file docker.env up -d --build
+   docker compose -f compose.yaml -f compose.build.yaml --env-file docker.env build
+   docker compose -f compose.yaml -f compose.build.yaml --env-file docker.env push
    ```
 
-   O `migrate` aplica só a migration nova e a `app` é recriada em seguida.
+4. No servidor, troque o `IMAGE_TAG` no `docker.env` para a mesma versão e rode:
+
+   ```bash
+   docker compose --env-file docker.env up -d
+   ```
+
+   O `up` baixa as imagens novas, o `migrate` aplica só a migration nova e a `app` é recriada em seguida.
 
 > Nunca edite ou apague uma migration que já foi aplicada em produção. Para corrigir algo, crie uma migration nova.
 
@@ -206,8 +226,8 @@ Os dados só são apagados removendo a pasta `docker_data`, **com os containers 
 
 ```bash
 docker compose --env-file docker.env down
-rm -rf docker_data          # Windows (cmd): rmdir /s /q docker_data
-docker compose --env-file docker.env up -d --build
+rm -rf docker_data
+docker compose --env-file docker.env up -d
 ```
 
 > **Atenção:** isso apaga **todos os dados do banco** e os logs, sem como desfazer. Faça uma cópia da pasta `docker_data` antes, se precisar guardar os dados.
@@ -238,3 +258,42 @@ docker compose --env-file docker.env run --rm migrate npx prisma migrate status
 # Abre o psql dentro do container do banco (\q para sair)
 docker compose --env-file docker.env exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 ```
+
+## 9. Publicar as imagens no GitHub Container Registry (GHCR)
+
+As imagens ficam em `ghcr.io/USUARIO/nest-prisma-app` e `ghcr.io/USUARIO/nest-prisma-migrator`.
+O `LABEL org.opencontainers.image.source` do `Dockerfile` liga os pacotes a este repositório no GitHub.
+
+1. Crie um token (classic) com o escopo `write:packages` (e `delete:packages`, se for apagar versões):
+   <https://github.com/settings/tokens/new?scopes=write:packages>. O escopo `repo` não é necessário.
+2. Entre no registro (no `Password:`, cole o token):
+
+   ```bash
+   docker login ghcr.io -u USUARIO
+   ```
+
+   Se o Git Bash mostrar `cannot perform an interactive login from a non-TTY device`, use a alternativa (um comando por vez):
+
+   ```bash
+   read -s CR_PAT
+   echo "$CR_PAT" | docker login ghcr.io -u USUARIO --password-stdin
+   unset CR_PAT
+   ```
+
+3. Gere e envie as imagens da versão do `IMAGE_TAG`:
+
+   ```bash
+   docker compose -f compose.yaml -f compose.build.yaml --env-file docker.env build
+   docker compose -f compose.yaml -f compose.build.yaml --env-file docker.env push
+   ```
+
+4. Em outra máquina, basta o `compose.yaml` e o `docker.env` (sem o código-fonte). Com o login feito (ou com os pacotes públicos):
+
+   ```bash
+   docker compose --env-file docker.env up -d
+   ```
+
+   O `up` baixa as imagens do GHCR que faltarem.
+
+> Os pacotes novos são **privados**. Para mudar: página do pacote → **Package settings** → **Change visibility**.
+> Nunca reenvie uma versão já publicada: o push com a mesma tag substitui a imagem. Mudou algo, use um número novo.

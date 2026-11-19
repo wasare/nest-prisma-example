@@ -1,7 +1,8 @@
 # Deploy de exemplo: PostgreSQL + migrations do Prisma + API NestJS.
 #
-# Uso, na raiz do projeto (docker.env é criado a partir de docker.env.example):
-#   docker compose --env-file docker.env up -d --build
+# Uso (docker.env é criado a partir de docker.env.example):
+#   docker compose --env-file docker.env up -d
+# As imagens vêm do GHCR. Para gerá-las, veja o compose.build.yaml.
 #
 # Ordem de inicialização:
 #   db (saudável) -> migrate (terminou com sucesso) -> app
@@ -33,10 +34,7 @@ services:
     # O banco NÃO expõe porta para fora: só migrate e app o acessam, pela rede interna.
 
   migrate:
-    build:
-      context: .
-      target: migrator
-    image: nest-prisma-migrator
+    image: ${IMAGE_PREFIX:?}/nest-prisma-migrator:${IMAGE_TAG:?}
     environment:
       <<: *database-url
     depends_on:
@@ -46,10 +44,7 @@ services:
     restart: "no"
 
   app:
-    build:
-      context: .
-      target: runtime
-    image: nest-prisma-app
+    image: ${IMAGE_PREFIX:?}/nest-prisma-app:${IMAGE_TAG:?}
     restart: unless-stopped
     # Usa um init leve como PID 1: repassa o sinal de parada para o Node e
     # permite que a app encerre sozinha (fechando a conexão com o banco).
@@ -77,7 +72,7 @@ services:
   # Usa upsert pelo SKU, então pode rodar várias vezes sem duplicar.
   #   docker compose --env-file docker.env run --rm seed
   seed:
-    image: nest-prisma-migrator
+    image: ${IMAGE_PREFIX:?}/nest-prisma-migrator:${IMAGE_TAG:?}
     profiles: ["seed"]
     environment:
       <<: *database-url

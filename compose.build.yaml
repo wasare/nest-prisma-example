@@ -1,0 +1,12 @@
+# Só para quem GERA as imagens (computador com o código-fonte).
+# Use junto com o compose.yaml:
+#   docker compose -f compose.yaml -f compose.build.yaml --env-file docker.env build
+services:
+  migrate:
+    build:
+      context: .
+      target: migrator
+  app:
+    build:
+      context: .
+      target: runtime

@@ -23,6 +23,9 @@ RUN npm run build
 # as migrations e o client gerado.
 # ---------------------------------------------------------------------------
 FROM build AS migrator
+# Metadados que o GitHub mostra na página do pacote; o "source" liga a imagem ao repositório.
+LABEL org.opencontainers.image.source=https://github.com/wasare/nest-prisma-example
+LABEL org.opencontainers.image.description="Migrations e seed do Prisma (nest-prisma-example)"
 ENV NODE_ENV=production \
     NPM_CONFIG_UPDATE_NOTIFIER=false
 USER node
@@ -35,6 +38,8 @@ CMD ["npx", "prisma", "migrate", "deploy"]
 # Só dependências de produção + código compilado.
 # ---------------------------------------------------------------------------
 FROM node:24-alpine AS runtime
+LABEL org.opencontainers.image.source=https://github.com/wasare/nest-prisma-example
+LABEL org.opencontainers.image.description="API NestJS + Prisma (nest-prisma-example)"
 WORKDIR /app
 ENV NODE_ENV=production
 
